@@ -6,6 +6,7 @@
 package grpc
 
 import (
+	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"gopkg.in/DataDog/dd-trace-go.v1/internal/appsec"
@@ -153,7 +154,13 @@ func UnaryServerInterceptor(opts ...Option) grpc.UnaryServerInterceptor {
 			handler = appsecUnaryHandlerMiddleware(span, handler)
 		}
 		resp, err := handler(ctx, req)
-		finishWithError(span, err, cfg)
+		response, ok := resp.(*auth.CheckResponse)
+		if !ok {
+			finishWithError(span, err, cfg)
+		} else {
+			finishWithErrorForEnvoyAuth(span, response, err, cfg)
+		}
+
 		return resp, err
 	}
 }

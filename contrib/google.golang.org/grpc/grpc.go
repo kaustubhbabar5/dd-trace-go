@@ -12,10 +12,13 @@ import (
 	"errors"
 	"io"
 	"math"
+	"net/http"
 
+	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"gopkg.in/DataDog/dd-trace-go.v1/contrib/google.golang.org/internal/grpcutil"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 
 	context "golang.org/x/net/context"
@@ -81,3 +84,36 @@ func finishWithError(span ddtrace.Span, err error, cfg *config) {
 	}
 	span.Finish(finishOptions...)
 }
+
+// finishWithError applies finish option and a tag with gRPC status code, disregarding OK, EOF and Canceled errors.
+func finishWithErrorForEnvoyAuth(span ddtrace.Span, res *auth.CheckResponse, err error, cfg *config) {
+
+	if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
+		err = nil
+	}
+	errcode := status.Code(err)
+	if errcode == codes.OK || cfg.nonErrorCodes[errcode] {
+		err = nil
+	}
+	if errcode == codes.OK {
+		code, ok := HTTPCodeTOGRPCCode[res.Status.Code]
+		if ok {
+			errcode = code
+			err = errors.New(http.StatusText(int(res.Status.Code)))
+		}
+	}
+	span.SetTag(tagCode, errcode.String())
+
+	// only allocate finishOptions if needed, and allocate the exact right size
+	var finishOptions []tracer.FinishOption
+	if err != nil {
+		if cfg.noDebugStack {
+			finishOptions = []tracer.FinishOption{tracer.WithError(err), tracer.NoDebugStack()}
+		} else {
+			finishOptions = []tracer.FinishOption{tracer.WithError(err)}
+		}
+	}
+	span.Finish(finishOptions...)
+}
+
+var HTTPCodeTOGRPCCode map[int32]codes.Code = map[int32]codes.Code{http.StatusBadRequest: codes.Unknown, 401: codes.Unknown, 403: codes.Unknown, 404: codes.Unknown, 429: codes.Unknown, 502: codes.Unknown, 503: codes.Unknown, 504: codes.Unknown}

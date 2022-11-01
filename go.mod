@@ -86,6 +86,8 @@ require (
 	k8s.io/client-go v0.17.0
 )
 
+require github.com/envoyproxy/go-control-plane v0.9.4
+
 require (
 	cloud.google.com/go v0.57.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
@@ -100,6 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -107,6 +110,7 @@ require (
 	github.com/eapache/go-resiliency v1.1.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
+	github.com/envoyproxy/protoc-gen-validate v0.1.0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/frankban/quicktest v1.13.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
